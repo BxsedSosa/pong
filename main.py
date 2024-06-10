@@ -1,7 +1,4 @@
 import sys, pygame
-from time import sleep
-
-from pygame.cursors import ball
 
 pygame.init()
 
@@ -17,12 +14,26 @@ player_pos = pygame.Rect(20, screen.get_height() / 2, 10, 70)
 cpu_pos = pygame.Rect(screen.get_width() - 30, screen.get_height() / 2, 10, 70)
 
 
-def movement(object_position):
+def movement(player_pos, cpu_pos):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]:
-        object_position[1] -= 5
+        player_pos[1] -= 5
     if keys[pygame.K_DOWN]:
-        object_position[1] += 5
+        player_pos[1] += 5
+
+    if cpu_pos[1] < ball_pos[1]:
+        cpu_pos[1] += 5
+    if cpu_pos[1] > ball_pos[1]:
+        cpu_pos[1] -= 5
+
+
+def check_bar_collision(*args):
+
+    for arg in args:
+        if arg[1] <= 0:
+            arg[1] = 0
+        elif arg[1] >= screen.get_height() - 70:
+            arg[1] = screen.get_height() - 70
 
 
 def check_ball_collision(ball_pos):
@@ -46,10 +57,15 @@ def check_for_winner():
         ball_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
 
-def bar_ball_collision(ball_pos, object_position):
+def bar_ball_collision(ball_pos, player_pos, cpu_pos):
     global x
-    if ball_pos[0] < object_position[0] and ball_pos[1] in range(
-        object_position[1], object_position[1] + object_position[3]
+    if ball_pos[0] - 5 <= player_pos[0] and ball_pos[1] in range(
+        player_pos[1], player_pos[1] + player_pos[3]
+    ):
+        x *= -1
+
+    if ball_pos[0] + 5 >= cpu_pos[0] and ball_pos[1] in range(
+        cpu_pos[1], cpu_pos[1] + cpu_pos[3]
     ):
         x *= -1
 
@@ -60,8 +76,6 @@ while True:
             print("Exit")
             sys.exit()
 
-    print(player_pos)
-
     circle = pygame.draw.circle(screen, "white", ball_pos, 5)
     player = pygame.draw.rect(screen, "white", player_pos)
     cpu = pygame.draw.rect(screen, "white", cpu_pos)
@@ -70,8 +84,9 @@ while True:
     ball_pos[1] += y
 
     check_ball_collision(ball_pos)
-    movement(player_pos)
-    bar_ball_collision(ball_pos, player_pos)
+    check_bar_collision(player_pos, cpu_pos)
+    movement(player_pos, cpu_pos)
+    bar_ball_collision(ball_pos, player_pos, cpu_pos)
     check_for_winner()
 
     pygame.display.flip()
